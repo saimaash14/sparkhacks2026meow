@@ -239,7 +239,6 @@ export default function App() {
             LoopedIn
           </h1>
 
-          {/* ✅ keep YOUR original description text */}
           <p style={styles.subtitle}>
             📍 Find student organizations and campus resources that match your
             interests, all in one place.
@@ -328,7 +327,10 @@ export default function App() {
           {/* post request button */}
           {discoverMode === "requests" ? (
             <div style={{ marginTop: 10 }}>
-              <button style={styles.smallBtn} onClick={() => setIsRequestOpen(true)}>
+              <button
+                style={styles.smallBtn}
+                onClick={() => setIsRequestOpen(true)}
+              >
                 ➕ Post a Request
               </button>
             </div>
@@ -446,16 +448,23 @@ export default function App() {
 
       {/* full-screen modals */}
       {activeClub ? (
-        <FullScreenClubModal club={activeClub} onClose={() => setActiveClub(null)} />
+        <FullScreenClubModal
+          club={activeClub}
+          onClose={() => setActiveClub(null)}
+        />
       ) : null}
 
       {activeVendor ? (
-        <FullScreenVendorModal vendor={activeVendor} onClose={() => setActiveVendor(null)} />
+        <FullScreenVendorModal
+          vendor={activeVendor}
+          onClose={() => setActiveVendor(null)}
+        />
       ) : null}
 
       <footer style={styles.footer}>
         <span style={styles.footerText}>
-          MVP dataset: seed UIC orgs + user-added clubs + vendor requests • saved locally
+          MVP dataset: seed UIC orgs + user-added clubs + vendor requests • saved
+          locally
         </span>
       </footer>
     </div>
@@ -463,23 +472,42 @@ export default function App() {
 }
 
 function ClubTile({ club, hearted, onToggleHeart, onOpenProfile }) {
+  const clubLogo = club.logo_url;
+
   return (
     <article style={styles.card}>
       <div style={styles.cardTop}>
-        <div style={{ flex: 1 }}>
-          <div style={styles.cardTitleRow}>
-            <button
-              type="button"
-              onClick={onOpenProfile}
-              style={styles.cardTitleButton}
-              title="Open club profile"
-            >
-              {club.name}
-            </button>
+        {/* LEFT: logo + text */}
+        <div style={{ display: "flex", gap: 12, alignItems: "flex-start", flex: 1 }}>
+          {clubLogo ? (
+            <img
+              src={clubLogo}
+              alt={`${club.name} logo`}
+              style={styles.tileLogo}
+              onError={(e) => {
+                e.currentTarget.style.display = "none";
+              }}
+            />
+          ) : (
+            <div style={styles.tileLogoFallback}>No logo</div>
+          )}
+
+          <div style={{ flex: 1 }}>
+            <div style={styles.cardTitleRow}>
+              <button
+                type="button"
+                onClick={onOpenProfile}
+                style={styles.cardTitleButton}
+                title="Open club profile"
+              >
+                {club.name}
+              </button>
+            </div>
+            <p style={styles.cardDesc}>{club.description}</p>
           </div>
-          <p style={styles.cardDesc}>{club.description}</p>
         </div>
 
+        {/* RIGHT: heart */}
         <button
           onClick={() => onToggleHeart(club.id)}
           style={{
@@ -499,18 +527,36 @@ function ClubTile({ club, hearted, onToggleHeart, onOpenProfile }) {
         <TagRow label="Collab" items={club.collab_needs} />
       </div>
 
-      {/* ✅ icon contact buttons (wired correctly) */}
+      {/* ✅ icon contact buttons (IG + Discord) */}
       {club.contact || club.discord ? (
         <div style={styles.iconLinksRow}>
           {club.contact ? (
-            <a href={club.contact} target="_blank" rel="noreferrer" title="Instagram / Contact">
-              <img src={instagramlogo} alt="Instagram" style={styles.iconLinkImg} />
+            <a
+              href={club.contact}
+              target="_blank"
+              rel="noreferrer"
+              title="Instagram / Contact"
+            >
+              <img
+                src={instagramlogo}
+                alt="Instagram"
+                style={styles.iconLinkImg}
+              />
             </a>
           ) : null}
 
           {club.discord ? (
-            <a href={club.discord} target="_blank" rel="noreferrer" title="Discord">
-              <img src={discordlogo} alt="Discord" style={styles.iconLinkImg} />
+            <a
+              href={club.discord}
+              target="_blank"
+              rel="noreferrer"
+              title="Discord"
+            >
+              <img
+                src={discordlogo}
+                alt="Discord"
+                style={styles.iconLinkImg}
+              />
             </a>
           ) : null}
         </div>
@@ -522,18 +568,40 @@ function ClubTile({ club, hearted, onToggleHeart, onOpenProfile }) {
 }
 
 function VendorTile({ vendor, onOpenProfile }) {
+  const vendorLogo = vendor.logo_url;
+
   return (
     <article style={styles.card}>
-      <button
-        type="button"
-        onClick={onOpenProfile}
-        style={styles.cardTitleButton}
-        title="Open vendor profile"
-      >
-        {vendor.name}
-      </button>
+      <div style={styles.cardTop}>
+        {/* LEFT: logo + text */}
+        <div style={{ display: "flex", gap: 12, alignItems: "flex-start", flex: 1 }}>
+          {vendorLogo ? (
+            <img
+              src={vendorLogo}
+              alt={`${vendor.name} logo`}
+              style={styles.tileLogo}
+              onError={(e) => {
+                e.currentTarget.style.display = "none";
+              }}
+            />
+          ) : (
+            <div style={styles.tileLogoFallback}>No logo</div>
+          )}
 
-      <p style={styles.cardDesc}>{vendor.description}</p>
+          <div style={{ flex: 1 }}>
+            <button
+              type="button"
+              onClick={onOpenProfile}
+              style={styles.cardTitleButton}
+              title="Open vendor profile"
+            >
+              {vendor.name}
+            </button>
+
+            <p style={styles.cardDesc}>{vendor.description}</p>
+          </div>
+        </div>
+      </div>
 
       <div style={styles.tagsArea}>
         <TagRow label="Services" items={vendor.services} />
@@ -1004,7 +1072,11 @@ function FullScreenClubModal({ club, onClose }) {
         <div style={styles.fullTopBar}>
           <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
             {logoUrl ? (
-              <img src={logoUrl} alt={`${club.name} logo`} style={styles.clubLogo} />
+              <img
+                src={logoUrl}
+                alt={`${club.name} logo`}
+                style={styles.clubLogo}
+              />
             ) : (
               <div style={styles.clubLogoFallback}>No logo</div>
             )}
@@ -1028,7 +1100,11 @@ function FullScreenClubModal({ club, onClose }) {
             </div>
           </div>
 
-          <button onClick={onClose} style={styles.fullCloseBtn} aria-label="Close">
+          <button
+            onClick={onClose}
+            style={styles.fullCloseBtn}
+            aria-label="Close"
+          >
             ✕
           </button>
         </div>
@@ -1039,9 +1115,20 @@ function FullScreenClubModal({ club, onClose }) {
             {events.length ? (
               <div style={styles.eventsList}>
                 {events.map((ev, idx) => (
-                  <div key={`${ev.title || "event"}-${idx}`} style={styles.eventCard}>
-                    <div style={{ display: "flex", justifyContent: "space-between", gap: 10 }}>
-                      <div style={{ fontWeight: 700 }}>{ev.title || "Untitled event"}</div>
+                  <div
+                    key={`${ev.title || "event"}-${idx}`}
+                    style={styles.eventCard}
+                  >
+                    <div
+                      style={{
+                        display: "flex",
+                        justifyContent: "space-between",
+                        gap: 10,
+                      }}
+                    >
+                      <div style={{ fontWeight: 700 }}>
+                        {ev.title || "Untitled event"}
+                      </div>
                       {ev.date || ev.time ? (
                         <div style={{ color: "#666", fontSize: 12 }}>
                           {[ev.date, ev.time].filter(Boolean).join(" • ")}
@@ -1050,13 +1137,17 @@ function FullScreenClubModal({ club, onClose }) {
                     </div>
 
                     {ev.location ? (
-                      <div style={{ color: "#666", fontSize: 12, marginTop: 4 }}>
+                      <div
+                        style={{ color: "#666", fontSize: 12, marginTop: 4 }}
+                      >
                         📍 {ev.location}
                       </div>
                     ) : null}
 
                     {ev.description ? (
-                      <div style={{ color: "#444", marginTop: 6, lineHeight: 1.4 }}>
+                      <div
+                        style={{ color: "#444", marginTop: 6, lineHeight: 1.4 }}
+                      >
                         {ev.description}
                       </div>
                     ) : null}
@@ -1075,7 +1166,9 @@ function FullScreenClubModal({ club, onClose }) {
                 ))}
               </div>
             ) : (
-              <p style={{ margin: 0, color: "#777" }}>No upcoming events posted yet.</p>
+              <p style={{ margin: 0, color: "#777" }}>
+                No upcoming events posted yet.
+              </p>
             )}
           </section>
 
@@ -1089,13 +1182,15 @@ function FullScreenClubModal({ club, onClose }) {
           <section style={styles.fullSection}>
             <h3 style={styles.fullH3}>Tags</h3>
             <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
-              {[...(club.interests ?? []), ...(club.vibes ?? []), ...(club.collab_needs ?? [])].map(
-                (t) => (
-                  <span key={t} style={styles.tag}>
-                    {t}
-                  </span>
-                )
-              )}
+              {[
+                ...(club.interests ?? []),
+                ...(club.vibes ?? []),
+                ...(club.collab_needs ?? []),
+              ].map((t) => (
+                <span key={t} style={styles.tag}>
+                  {t}
+                </span>
+              ))}
             </div>
           </section>
 
@@ -1104,7 +1199,13 @@ function FullScreenClubModal({ club, onClose }) {
             {flyers.length ? (
               <div style={styles.mediaGrid}>
                 {flyers.map((url) => (
-                  <a key={url} href={url} target="_blank" rel="noreferrer" style={{ textDecoration: "none" }}>
+                  <a
+                    key={url}
+                    href={url}
+                    target="_blank"
+                    rel="noreferrer"
+                    style={{ textDecoration: "none" }}
+                  >
                     <img src={url} alt="Flyer" style={styles.mediaImg} />
                   </a>
                 ))}
@@ -1119,7 +1220,13 @@ function FullScreenClubModal({ club, onClose }) {
             {photos.length ? (
               <div style={styles.mediaGrid}>
                 {photos.map((url) => (
-                  <a key={url} href={url} target="_blank" rel="noreferrer" style={{ textDecoration: "none" }}>
+                  <a
+                    key={url}
+                    href={url}
+                    target="_blank"
+                    rel="noreferrer"
+                    style={{ textDecoration: "none" }}
+                  >
                     <img src={url} alt="Club" style={styles.mediaImg} />
                   </a>
                 ))}
@@ -1133,15 +1240,27 @@ function FullScreenClubModal({ club, onClose }) {
             <h3 style={styles.fullH3}>Contact</h3>
             <div style={{ display: "grid", gap: 8 }}>
               {club.contact ? (
-                <a href={club.contact} target="_blank" rel="noreferrer" style={styles.link}>
+                <a
+                  href={club.contact}
+                  target="_blank"
+                  rel="noreferrer"
+                  style={styles.link}
+                >
                   {club.contact}
                 </a>
               ) : (
-                <p style={{ margin: 0, color: "#777" }}>No contact link provided.</p>
+                <p style={{ margin: 0, color: "#777" }}>
+                  No contact link provided.
+                </p>
               )}
 
               {club.discord ? (
-                <a href={club.discord} target="_blank" rel="noreferrer" style={styles.link}>
+                <a
+                  href={club.discord}
+                  target="_blank"
+                  rel="noreferrer"
+                  style={styles.link}
+                >
                   {club.discord}
                 </a>
               ) : null}
@@ -1172,7 +1291,11 @@ function FullScreenVendorModal({ vendor, onClose }) {
         <div style={styles.fullTopBar}>
           <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
             {logoUrl ? (
-              <img src={logoUrl} alt={`${vendor.name} logo`} style={styles.clubLogo} />
+              <img
+                src={logoUrl}
+                alt={`${vendor.name} logo`}
+                style={styles.clubLogo}
+              />
             ) : (
               <div style={styles.clubLogoFallback}>No logo</div>
             )}
@@ -1185,7 +1308,11 @@ function FullScreenVendorModal({ vendor, onClose }) {
             </div>
           </div>
 
-          <button onClick={onClose} style={styles.fullCloseBtn} aria-label="Close">
+          <button
+            onClick={onClose}
+            style={styles.fullCloseBtn}
+            aria-label="Close"
+          >
             ✕
           </button>
         </div>
@@ -1222,7 +1349,13 @@ function FullScreenVendorModal({ vendor, onClose }) {
               <h3 style={styles.fullH3}>Photos</h3>
               <div style={styles.mediaGrid}>
                 {photos.map((url) => (
-                  <a key={url} href={url} target="_blank" rel="noreferrer" style={{ textDecoration: "none" }}>
+                  <a
+                    key={url}
+                    href={url}
+                    target="_blank"
+                    rel="noreferrer"
+                    style={{ textDecoration: "none" }}
+                  >
                     <img src={url} alt="Vendor" style={styles.mediaImg} />
                   </a>
                 ))}
@@ -1233,11 +1366,18 @@ function FullScreenVendorModal({ vendor, onClose }) {
           <section style={styles.fullSection}>
             <h3 style={styles.fullH3}>Contact</h3>
             {vendor.contact ? (
-              <a href={vendor.contact} target="_blank" rel="noreferrer" style={styles.link}>
+              <a
+                href={vendor.contact}
+                target="_blank"
+                rel="noreferrer"
+                style={styles.link}
+              >
                 {vendor.contact}
               </a>
             ) : (
-              <p style={{ margin: 0, color: "#777" }}>No contact link provided.</p>
+              <p style={{ margin: 0, color: "#777" }}>
+                No contact link provided.
+              </p>
             )}
           </section>
         </div>
@@ -1433,10 +1573,43 @@ const styles = {
     textDecoration: "none",
     wordBreak: "break-word",
   },
-  noLink: { display: "inline-block", marginTop: 12, color: "#999", fontSize: 12 },
+  noLink: {
+    display: "inline-block",
+    marginTop: 12,
+    color: "#999",
+    fontSize: 12,
+  },
 
-  // ✅ icon-link styles
-  iconLinksRow: { display: "flex", gap: 10, marginTop: 12, alignItems: "center" },
+  // ✅ tile logos (from your 2nd code)
+  tileLogo: {
+    width: 44,
+    height: 44,
+    objectFit: "cover",
+    borderRadius: 12,
+    border: "1px solid #eee",
+    background: "#fff",
+    flexShrink: 0,
+  },
+  tileLogoFallback: {
+    width: 44,
+    height: 44,
+    borderRadius: 12,
+    border: "1px solid #eee",
+    background: "#fafafa",
+    color: "#777",
+    fontSize: 11,
+    display: "grid",
+    placeItems: "center",
+    flexShrink: 0,
+  },
+
+  // ✅ icon-link styles (from your 1st code)
+  iconLinksRow: {
+    display: "flex",
+    gap: 10,
+    marginTop: 12,
+    alignItems: "center",
+  },
   iconLinkImg: { height: 20, width: "auto", cursor: "pointer" },
 
   overlay: {
