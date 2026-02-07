@@ -39,7 +39,24 @@ function matchesQueryClub(club, q) {
     ...(club.interests || []),
     ...(club.vibes || []),
     ...(club.collab_needs || []),
+
+    // ✅ extra profile fields (optional)
+    club.mission,
+    club.location,
+    club.meeting_time,
+    club.banner_url,
+    club.logo_url,
+    ...(club.flyers || []),
+    ...(club.photos || []),
+    ...(club.upcoming_events || []).flatMap((e) => [
+      e?.title,
+      e?.date,
+      e?.time,
+      e?.location,
+      e?.description,
+    ]),
   ]
+    .filter(Boolean)
     .join(" ")
     .toLowerCase();
 
@@ -57,6 +74,7 @@ function matchesQueryVendor(vendor, q) {
     ...(vendor.availability || []),
     vendor.price_range,
   ]
+    .filter(Boolean)
     .join(" ")
     .toLowerCase();
 
@@ -74,6 +92,7 @@ function matchesQueryRequest(req, q) {
     req.date,
     req.time_window,
   ]
+    .filter(Boolean)
     .join(" ")
     .toLowerCase();
 
@@ -266,11 +285,10 @@ export default function App() {
           </div>
 
           {/* mode toggle */}
-          <div style={{ display: "flex", gap: 8, marginTop: 10, flexWrap: "wrap" }}>
+          <div style={styles.modeToggle}>
             {["clubs", "vendors", "requests"].map((m) => {
               const active = discoverMode === m;
-              const label =
-                m === "clubs" ? "Clubs" : m === "vendors" ? "Vendors" : "Requests";
+              const label = m === "clubs" ? "Clubs" : m === "vendors" ? "Vendors" : "Requests";
 
               return (
                 <button
@@ -302,15 +320,11 @@ export default function App() {
           {/* club tags */}
           {discoverMode === "clubs" ? (
             <>
-              <p style={styles.muted}>
-                Pick a theme to explore (these rotate). You can also search.
-              </p>
+              <p style={styles.muted}>Pick a theme to explore (these rotate). You can also search.</p>
 
               <div style={styles.chipsWrap}>
                 {themeTags.map((tag) => {
-                  const active = selectedTags.some(
-                    (t) => normalize(t) === normalize(tag)
-                  );
+                  const active = selectedTags.some((t) => normalize(t) === normalize(tag));
 
                   return (
                     <button
@@ -331,8 +345,7 @@ export default function App() {
 
               {selectedTags.length ? (
                 <p style={styles.filterLine}>
-                  Filtering by:{" "}
-                  <span style={styles.filterTags}>{selectedTags.join(", ")}</span>
+                  Filtering by: <span style={styles.filterTags}>{selectedTags.join(", ")}</span>
                 </p>
               ) : null}
             </>
@@ -408,15 +421,10 @@ export default function App() {
       ) : null}
 
       {/* full-screen modals */}
-      {activeClub ? (
-        <FullScreenClubModal club={activeClub} onClose={() => setActiveClub(null)} />
-      ) : null}
+      {activeClub ? <FullScreenClubModal club={activeClub} onClose={() => setActiveClub(null)} /> : null}
 
       {activeVendor ? (
-        <FullScreenVendorModal
-          vendor={activeVendor}
-          onClose={() => setActiveVendor(null)}
-        />
+        <FullScreenVendorModal vendor={activeVendor} onClose={() => setActiveVendor(null)} />
       ) : null}
 
       <footer style={styles.footer}>
@@ -434,12 +442,7 @@ function ClubTile({ club, hearted, onToggleHeart, onOpenProfile }) {
       <div style={styles.cardTop}>
         <div style={{ flex: 1 }}>
           <div style={styles.cardTitleRow}>
-            <button
-              type="button"
-              onClick={onOpenProfile}
-              style={styles.cardTitleButton}
-              title="Open club profile"
-            >
+            <button type="button" onClick={onOpenProfile} style={styles.cardTitleButton} title="Open club profile">
               {club.name}
             </button>
           </div>
@@ -448,10 +451,7 @@ function ClubTile({ club, hearted, onToggleHeart, onOpenProfile }) {
 
         <button
           onClick={() => onToggleHeart(club.id)}
-          style={{
-            ...styles.heartBtn,
-            background: hearted ? "#ffe7ef" : "white",
-          }}
+          style={{ ...styles.heartBtn, background: hearted ? "#ffe7ef" : "white" }}
           title={hearted ? "Unheart" : "Heart"}
           aria-label={hearted ? "Unheart club" : "Heart club"}
         >
@@ -479,12 +479,7 @@ function ClubTile({ club, hearted, onToggleHeart, onOpenProfile }) {
 function VendorTile({ vendor, onOpenProfile }) {
   return (
     <article style={styles.card}>
-      <button
-        type="button"
-        onClick={onOpenProfile}
-        style={styles.cardTitleButton}
-        title="Open vendor profile"
-      >
+      <button type="button" onClick={onOpenProfile} style={styles.cardTitleButton} title="Open vendor profile">
         {vendor.name}
       </button>
 
@@ -579,6 +574,16 @@ function NewClubForm({ existingIds, onAddClub, onCancel }) {
   const [contact, setContact] = useState("");
   const [discord, setDiscord] = useState("");
 
+  // ✅ extra profile fields
+  const [mission, setMission] = useState("");
+  const [location, setLocation] = useState("");
+  const [meetingTime, setMeetingTime] = useState("");
+  const [logoUrl, setLogoUrl] = useState("");
+  const [bannerUrl, setBannerUrl] = useState("");
+  const [flyers, setFlyers] = useState("");
+  const [photos, setPhotos] = useState("");
+  const [upcomingEvents, setUpcomingEvents] = useState("");
+
   function nextId() {
     let id = Math.floor(Math.random() * 1000000) + 1000;
     while (existingIds.has(id)) id++;
@@ -594,6 +599,23 @@ function NewClubForm({ existingIds, onAddClub, onCancel }) {
       id: nextId(),
       name: cleanName,
       description: description.trim() || "No description provided yet.",
+
+      mission: mission.trim(),
+      location: location.trim(),
+      meeting_time: meetingTime.trim(),
+
+      logo_url: logoUrl.trim(),
+      banner_url: bannerUrl.trim(),
+      flyers: flyers
+        .split(",")
+        .map((s) => s.trim())
+        .filter(Boolean),
+      photos: photos
+        .split(",")
+        .map((s) => s.trim())
+        .filter(Boolean),
+      upcoming_events: parseUpcomingEvents(upcomingEvents),
+
       interests: interests.split(",").map((s) => s.trim()).filter(Boolean),
       vibes: vibes.split(",").map((s) => s.trim()).filter(Boolean),
       collab_needs: collabNeeds.split(",").map((s) => s.trim()).filter(Boolean),
@@ -610,16 +632,19 @@ function NewClubForm({ existingIds, onAddClub, onCancel }) {
     setCollabNeeds("");
     setContact("");
     setDiscord("");
+    setMission("");
+    setLocation("");
+    setMeetingTime("");
+    setLogoUrl("");
+    setBannerUrl("");
+    setFlyers("");
+    setPhotos("");
+    setUpcomingEvents("");
   }
 
   return (
     <form onSubmit={handleSubmit} style={styles.formGrid}>
-      <input
-        value={name}
-        onChange={(e) => setName(e.target.value)}
-        placeholder="Club name (required)"
-        style={styles.input}
-      />
+      <input value={name} onChange={(e) => setName(e.target.value)} placeholder="Club name (required)" style={styles.input} />
 
       <textarea
         value={description}
@@ -629,19 +654,75 @@ function NewClubForm({ existingIds, onAddClub, onCancel }) {
         style={styles.textarea}
       />
 
+      <input value={mission} onChange={(e) => setMission(e.target.value)} placeholder="Mission (optional)" style={styles.input} />
+
+      <div style={styles.twoCol}>
+        <input
+          value={location}
+          onChange={(e) => setLocation(e.target.value)}
+          placeholder="Location (optional) e.g. Student Center East"
+          style={styles.input}
+        />
+        <input
+          value={meetingTime}
+          onChange={(e) => setMeetingTime(e.target.value)}
+          placeholder="Meeting time (optional) e.g. Fridays 5pm"
+          style={styles.input}
+        />
+      </div>
+
+      <div style={styles.twoCol}>
+        <input
+          value={logoUrl}
+          onChange={(e) => setLogoUrl(e.target.value)}
+          placeholder='Logo URL (optional) e.g. "/images/clubs/msa.jpg"'
+          style={styles.input}
+        />
+        <input
+          value={bannerUrl}
+          onChange={(e) => setBannerUrl(e.target.value)}
+          placeholder='Banner URL (optional) e.g. "/images/banners/msa-banner.jpg"'
+          style={styles.input}
+        />
+      </div>
+
       <input
-        value={interests}
-        onChange={(e) => setInterests(e.target.value)}
-        placeholder="Interests (comma separated) e.g. tech, business, cricket"
+        value={flyers}
+        onChange={(e) => setFlyers(e.target.value)}
+        placeholder='Flyer image URLs (comma separated) e.g. "/images/flyers/f1.jpg, /images/flyers/f2.jpg"'
         style={styles.input}
       />
 
       <input
-        value={vibes}
-        onChange={(e) => setVibes(e.target.value)}
-        placeholder="Vibes (comma separated) e.g. chill, professional"
+        value={photos}
+        onChange={(e) => setPhotos(e.target.value)}
+        placeholder='Photos URLs (comma separated) e.g. "/images/clubs/p1.jpg, /images/clubs/p2.jpg"'
         style={styles.input}
       />
+
+      <textarea
+        value={upcomingEvents}
+        onChange={(e) => setUpcomingEvents(e.target.value)}
+        placeholder={
+          'Upcoming events (optional)\n' +
+          'Option 1: JSON array like:\n' +
+          '[{"title":"Game Night","date":"2026-03-10","time":"6pm","location":"SCE","link":""}]\n' +
+          'Option 2: One per line: Title | 2026-03-10 | 6pm | SCE | https://...'
+        }
+        rows={5}
+        style={styles.textarea}
+      />
+
+      <div style={styles.twoCol}>
+        <input
+          value={interests}
+          onChange={(e) => setInterests(e.target.value)}
+          placeholder="Interests (comma separated) e.g. tech, business, cricket"
+          style={styles.input}
+        />
+
+        <input value={vibes} onChange={(e) => setVibes(e.target.value)} placeholder="Vibes (comma separated) e.g. chill, professional" style={styles.input} />
+      </div>
 
       <input
         value={collabNeeds}
@@ -650,19 +731,10 @@ function NewClubForm({ existingIds, onAddClub, onCancel }) {
         style={styles.input}
       />
 
-      <input
-        value={contact}
-        onChange={(e) => setContact(e.target.value)}
-        placeholder="Instagram link (optional)"
-        style={styles.input}
-      />
-
-      <input
-        value={discord}
-        onChange={(e) => setDiscord(e.target.value)}
-        placeholder="Discord link (optional)"
-        style={styles.input}
-      />
+      <div style={styles.twoCol}>
+        <input value={contact} onChange={(e) => setContact(e.target.value)} placeholder="Instagram link (optional)" style={styles.input} />
+        <input value={discord} onChange={(e) => setDiscord(e.target.value)} placeholder="Discord link (optional)" style={styles.input} />
+      </div>
 
       <div style={styles.modalActions}>
         <button type="button" onClick={onCancel} style={styles.secondaryBtn}>
@@ -676,6 +748,36 @@ function NewClubForm({ existingIds, onAddClub, onCancel }) {
       <p style={styles.formHint}>Saved locally for demo. In production, this would submit to a database.</p>
     </form>
   );
+}
+
+function parseUpcomingEvents(text) {
+  const raw = (text ?? "").trim();
+  if (!raw) return [];
+
+  // If it's JSON, try parse
+  if (raw.startsWith("[") || raw.startsWith("{")) {
+    try {
+      const parsed = JSON.parse(raw);
+      if (Array.isArray(parsed)) return parsed;
+      return [parsed];
+    } catch {
+      // fall through to line parser
+    }
+  }
+
+  // Line format: Title | 2026-03-10 | 6pm | Location | https://...
+  const lines = raw.split("\n").map((l) => l.trim()).filter(Boolean);
+  return lines.map((line) => {
+    const parts = line.split("|").map((p) => p.trim());
+    const [title, date, time, location, link] = parts;
+    return {
+      title: title || "Untitled event",
+      date: date || "",
+      time: time || "",
+      location: location || "",
+      link: link || "",
+    };
+  });
 }
 
 function NewRequestForm({ existingIds, onAddRequest, onCancel }) {
@@ -724,19 +826,9 @@ function NewRequestForm({ existingIds, onAddRequest, onCancel }) {
 
   return (
     <form onSubmit={handleSubmit} style={styles.formGrid}>
-      <input
-        value={clubName}
-        onChange={(e) => setClubName(e.target.value)}
-        placeholder="Club name (required)"
-        style={styles.input}
-      />
+      <input value={clubName} onChange={(e) => setClubName(e.target.value)} placeholder="Club name (required)" style={styles.input} />
 
-      <input
-        value={title}
-        onChange={(e) => setTitle(e.target.value)}
-        placeholder="Request title (required)"
-        style={styles.input}
-      />
+      <input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Request title (required)" style={styles.input} />
 
       <textarea
         value={description}
@@ -746,40 +838,15 @@ function NewRequestForm({ existingIds, onAddRequest, onCancel }) {
         style={styles.textarea}
       />
 
-      <input
-        value={needs}
-        onChange={(e) => setNeeds(e.target.value)}
-        placeholder="Needs (comma separated) e.g. chai, halal, photography"
-        style={styles.input}
-      />
+      <input value={needs} onChange={(e) => setNeeds(e.target.value)} placeholder="Needs (comma separated) e.g. chai, halal, photography" style={styles.input} />
 
-      <input
-        value={budget}
-        onChange={(e) => setBudget(e.target.value)}
-        placeholder="Budget e.g. $, $$, $$$"
-        style={styles.input}
-      />
+      <input value={budget} onChange={(e) => setBudget(e.target.value)} placeholder="Budget e.g. $, $$, $$$" style={styles.input} />
 
-      <input
-        value={date}
-        onChange={(e) => setDate(e.target.value)}
-        placeholder="Date (optional) e.g. 2026-03-10"
-        style={styles.input}
-      />
+      <input value={date} onChange={(e) => setDate(e.target.value)} placeholder="Date (optional) e.g. 2026-03-10" style={styles.input} />
 
-      <input
-        value={timeWindow}
-        onChange={(e) => setTimeWindow(e.target.value)}
-        placeholder="Time window (optional) e.g. 6pm–10pm"
-        style={styles.input}
-      />
+      <input value={timeWindow} onChange={(e) => setTimeWindow(e.target.value)} placeholder="Time window (optional) e.g. 6pm–10pm" style={styles.input} />
 
-      <input
-        value={contact}
-        onChange={(e) => setContact(e.target.value)}
-        placeholder="Contact link (optional)"
-        style={styles.input}
-      />
+      <input value={contact} onChange={(e) => setContact(e.target.value)} placeholder="Contact link (optional)" style={styles.input} />
 
       <div style={styles.modalActions}>
         <button type="button" onClick={onCancel} style={styles.secondaryBtn}>
@@ -793,7 +860,7 @@ function NewRequestForm({ existingIds, onAddRequest, onCancel }) {
   );
 }
 
-/** ✅ Full-screen club profile modal */
+/** ✅ Full-screen club profile modal (banner + events + flyers + photos) */
 function FullScreenClubModal({ club, onClose }) {
   useEffect(() => {
     function onKeyDown(e) {
@@ -803,26 +870,37 @@ function FullScreenClubModal({ club, onClose }) {
     return () => window.removeEventListener("keydown", onKeyDown);
   }, [onClose]);
 
+  const banner = club.banner_url;
+  const logo = club.logo_url;
   const flyers = club.flyers ?? [];
   const photos = club.photos ?? [];
-  const logo = club.logo_url;
+  const events = club.upcoming_events ?? [];
 
   return (
     <div style={styles.fullOverlay} onMouseDown={onClose}>
       <div style={styles.fullModal} onMouseDown={(e) => e.stopPropagation()}>
+        {/* Banner */}
+        {banner ? (
+          <div style={styles.bannerWrap}>
+            <img src={banner} alt="Club banner" style={styles.bannerImg} />
+          </div>
+        ) : null}
+
+        {/* Top bar */}
         <div style={styles.fullTopBar}>
           <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-            {logo ? (
-              <img src={logo} alt={`${club.name} logo`} style={styles.clubLogo} />
-            ) : (
-              <div style={styles.clubLogoFallback}>No logo</div>
-            )}
+            {logo ? <img src={logo} alt={`${club.name} logo`} style={styles.clubLogo} /> : <div style={styles.clubLogoFallback}>No logo</div>}
 
             <div>
               <h2 style={{ margin: 0 }}>{club.name}</h2>
-              <p style={{ margin: "6px 0 0 0", color: "#666" }}>
-                {club.mission ?? club.description ?? ""}
-              </p>
+              <p style={{ margin: "6px 0 0 0", color: "#666" }}>{club.mission ?? club.description ?? ""}</p>
+
+              {(club.location || club.meeting_time) && (
+                <div style={styles.metaLine}>
+                  {club.location ? <span style={styles.metaPill}>📍 {club.location}</span> : null}
+                  {club.meeting_time ? <span style={styles.metaPill}>🗓️ {club.meeting_time}</span> : null}
+                </div>
+              )}
             </div>
           </div>
 
@@ -831,22 +909,50 @@ function FullScreenClubModal({ club, onClose }) {
           </button>
         </div>
 
+        {/* Content */}
         <div style={styles.fullContent}>
+          {/* Upcoming Events */}
           <section style={styles.fullSection}>
-            <h3 style={styles.fullH3}>About</h3>
-            <p style={{ margin: 0, color: "#444", lineHeight: 1.5 }}>
-              {club.description ?? "No description yet."}
-            </p>
+            <h3 style={styles.fullH3}>Upcoming Events</h3>
+            {events.length ? (
+              <div style={styles.eventsList}>
+                {events.map((ev, idx) => (
+                  <div key={`${ev.title || "event"}-${idx}`} style={styles.eventCard}>
+                    <div style={{ display: "flex", justifyContent: "space-between", gap: 10 }}>
+                      <div style={{ fontWeight: 700 }}>{ev.title || "Untitled event"}</div>
+                      {ev.date || ev.time ? (
+                        <div style={{ color: "#666", fontSize: 12 }}>{[ev.date, ev.time].filter(Boolean).join(" • ")}</div>
+                      ) : null}
+                    </div>
+
+                    {ev.location ? <div style={{ color: "#666", fontSize: 12, marginTop: 4 }}>📍 {ev.location}</div> : null}
+
+                    {ev.description ? <div style={{ color: "#444", marginTop: 6, lineHeight: 1.4 }}>{ev.description}</div> : null}
+
+                    {ev.link ? (
+                      <a href={ev.link} target="_blank" rel="noreferrer" style={{ ...styles.link, marginTop: 8 }}>
+                        Event link →
+                      </a>
+                    ) : null}
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p style={{ margin: 0, color: "#777" }}>No upcoming events posted yet.</p>
+            )}
           </section>
 
+          {/* About */}
+          <section style={styles.fullSection}>
+            <h3 style={styles.fullH3}>About</h3>
+            <p style={{ margin: 0, color: "#444", lineHeight: 1.5 }}>{club.description ?? "No description yet."}</p>
+          </section>
+
+          {/* Tags */}
           <section style={styles.fullSection}>
             <h3 style={styles.fullH3}>Tags</h3>
             <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
-              {[
-                ...(club.interests ?? []),
-                ...(club.vibes ?? []),
-                ...(club.collab_needs ?? []),
-              ].map((t) => (
+              {[...(club.interests ?? []), ...(club.vibes ?? []), ...(club.collab_needs ?? [])].map((t) => (
                 <span key={t} style={styles.tag}>
                   {t}
                 </span>
@@ -854,53 +960,56 @@ function FullScreenClubModal({ club, onClose }) {
             </div>
           </section>
 
-          {flyers.length ? (
-            <section style={styles.fullSection}>
-              <h3 style={styles.fullH3}>Flyers</h3>
+          {/* Flyers */}
+          <section style={styles.fullSection}>
+            <h3 style={styles.fullH3}>Flyers</h3>
+            {flyers.length ? (
               <div style={styles.mediaGrid}>
                 {flyers.map((url) => (
-                  <a
-                    key={url}
-                    href={url}
-                    target="_blank"
-                    rel="noreferrer"
-                    style={{ textDecoration: "none" }}
-                  >
+                  <a key={url} href={url} target="_blank" rel="noreferrer" style={{ textDecoration: "none" }}>
                     <img src={url} alt="Flyer" style={styles.mediaImg} />
                   </a>
                 ))}
               </div>
-            </section>
-          ) : null}
+            ) : (
+              <p style={{ margin: 0, color: "#777" }}>No flyers posted yet.</p>
+            )}
+          </section>
 
-          {photos.length ? (
-            <section style={styles.fullSection}>
-              <h3 style={styles.fullH3}>Photos</h3>
+          {/* Photos */}
+          <section style={styles.fullSection}>
+            <h3 style={styles.fullH3}>Photos</h3>
+            {photos.length ? (
               <div style={styles.mediaGrid}>
                 {photos.map((url) => (
-                  <a
-                    key={url}
-                    href={url}
-                    target="_blank"
-                    rel="noreferrer"
-                    style={{ textDecoration: "none" }}
-                  >
+                  <a key={url} href={url} target="_blank" rel="noreferrer" style={{ textDecoration: "none" }}>
                     <img src={url} alt="Club" style={styles.mediaImg} />
                   </a>
                 ))}
               </div>
-            </section>
-          ) : null}
+            ) : (
+              <p style={{ margin: 0, color: "#777" }}>No photos posted yet.</p>
+            )}
+          </section>
 
+          {/* Contact */}
           <section style={styles.fullSection}>
             <h3 style={styles.fullH3}>Contact</h3>
-            {club.contact ? (
-              <a href={club.contact} target="_blank" rel="noreferrer" style={styles.link}>
-                {club.contact}
-              </a>
-            ) : (
-              <p style={{ margin: 0, color: "#777" }}>No contact link provided.</p>
-            )}
+            <div style={{ display: "grid", gap: 8 }}>
+              {club.contact ? (
+                <a href={club.contact} target="_blank" rel="noreferrer" style={styles.link}>
+                  {club.contact}
+                </a>
+              ) : (
+                <p style={{ margin: 0, color: "#777" }}>No contact link provided.</p>
+              )}
+
+              {club.discord ? (
+                <a href={club.discord} target="_blank" rel="noreferrer" style={styles.link}>
+                  {club.discord}
+                </a>
+              ) : null}
+            </div>
           </section>
         </div>
       </div>
@@ -926,17 +1035,11 @@ function FullScreenVendorModal({ vendor, onClose }) {
       <div style={styles.fullModal} onMouseDown={(e) => e.stopPropagation()}>
         <div style={styles.fullTopBar}>
           <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-            {logo ? (
-              <img src={logo} alt={`${vendor.name} logo`} style={styles.clubLogo} />
-            ) : (
-              <div style={styles.clubLogoFallback}>No logo</div>
-            )}
+            {logo ? <img src={logo} alt={`${vendor.name} logo`} style={styles.clubLogo} /> : <div style={styles.clubLogoFallback}>No logo</div>}
 
             <div>
               <h2 style={{ margin: 0 }}>{vendor.name}</h2>
-              <p style={{ margin: "6px 0 0 0", color: "#666" }}>
-                {vendor.description ?? ""}
-              </p>
+              <p style={{ margin: "6px 0 0 0", color: "#666" }}>{vendor.description ?? ""}</p>
             </div>
           </div>
 
@@ -948,9 +1051,7 @@ function FullScreenVendorModal({ vendor, onClose }) {
         <div style={styles.fullContent}>
           <section style={styles.fullSection}>
             <h3 style={styles.fullH3}>About</h3>
-            <p style={{ margin: 0, color: "#444", lineHeight: 1.5 }}>
-              {vendor.description ?? "No description yet."}
-            </p>
+            <p style={{ margin: 0, color: "#444", lineHeight: 1.5 }}>{vendor.description ?? "No description yet."}</p>
           </section>
 
           <section style={styles.fullSection}>
@@ -977,13 +1078,7 @@ function FullScreenVendorModal({ vendor, onClose }) {
               <h3 style={styles.fullH3}>Photos</h3>
               <div style={styles.mediaGrid}>
                 {photos.map((url) => (
-                  <a
-                    key={url}
-                    href={url}
-                    target="_blank"
-                    rel="noreferrer"
-                    style={{ textDecoration: "none" }}
-                  >
+                  <a key={url} href={url} target="_blank" rel="noreferrer" style={{ textDecoration: "none" }}>
                     <img src={url} alt="Vendor" style={styles.mediaImg} />
                   </a>
                 ))}
@@ -1015,8 +1110,7 @@ const styles = {
     padding: 20,
     boxSizing: "border-box",
     color: "#111827",
-    fontFamily:
-      'ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial',
+    fontFamily: 'ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial',
   },
 
   header: {
@@ -1101,6 +1195,13 @@ const styles = {
   },
   muted: { margin: "10px 0 0 0", color: "#666" },
 
+  modeToggle: {
+    display: "flex",
+    gap: 8,
+    marginTop: 10,
+    flexWrap: "wrap",
+  },
+
   chipsWrap: {
     marginTop: 10,
     display: "flex",
@@ -1137,7 +1238,6 @@ const styles = {
   cardTitle: { margin: 0, fontSize: 16 },
   cardDesc: { margin: "6px 0 0 0", color: "#555", lineHeight: 1.35 },
 
-  // ✅ clickable title
   cardTitleButton: {
     border: "none",
     padding: 0,
@@ -1180,7 +1280,6 @@ const styles = {
   },
   noLink: { display: "inline-block", marginTop: 12, color: "#999", fontSize: 12 },
 
-  // Modal styles
   overlay: {
     position: "fixed",
     inset: 0,
@@ -1193,7 +1292,7 @@ const styles = {
   },
   modal: {
     width: "100%",
-    maxWidth: 560,
+    maxWidth: 680,
     background: "white",
     borderRadius: 16,
     border: "1px solid #eee",
@@ -1216,8 +1315,12 @@ const styles = {
   },
   modalSubtext: { margin: "10px 0 0 0", color: "#666" },
 
-  // Register form styles
   formGrid: { marginTop: 12, display: "grid", gap: 10 },
+  twoCol: {
+    display: "grid",
+    gridTemplateColumns: "1fr 1fr",
+    gap: 10,
+  },
   input: {
     padding: "10px 12px",
     borderRadius: 12,
@@ -1265,7 +1368,6 @@ const styles = {
   footer: { marginTop: 18, paddingTop: 10, borderTop: "1px solid #eee" },
   footerText: { color: "#888", fontSize: 12 },
 
-  // ✅ Full-screen modal styles
   fullOverlay: {
     position: "fixed",
     inset: 0,
@@ -1286,6 +1388,19 @@ const styles = {
     overflow: "hidden",
     display: "flex",
     flexDirection: "column",
+  },
+
+  bannerWrap: {
+    width: "100%",
+    height: 180,
+    borderBottom: "1px solid #eee",
+    background: "#f3f4f6",
+  },
+  bannerImg: {
+    width: "100%",
+    height: "100%",
+    objectFit: "cover",
+    display: "block",
   },
 
   fullTopBar: {
@@ -1313,6 +1428,7 @@ const styles = {
     objectFit: "cover",
     borderRadius: 14,
     border: "1px solid #eee",
+    background: "#fff",
   },
   clubLogoFallback: {
     width: 56,
@@ -1324,6 +1440,21 @@ const styles = {
     color: "#777",
     fontSize: 12,
     background: "#fafafa",
+  },
+
+  metaLine: {
+    marginTop: 8,
+    display: "flex",
+    gap: 8,
+    flexWrap: "wrap",
+  },
+  metaPill: {
+    fontSize: 12,
+    padding: "4px 8px",
+    borderRadius: 999,
+    border: "1px solid #eee",
+    background: "#fafafa",
+    color: "#444",
   },
 
   fullContent: {
@@ -1341,6 +1472,17 @@ const styles = {
   fullH3: {
     margin: "0 0 8px 0",
     fontSize: 16,
+  },
+
+  eventsList: {
+    display: "grid",
+    gap: 10,
+  },
+  eventCard: {
+    border: "1px solid #eee",
+    borderRadius: 14,
+    padding: 12,
+    background: "#fff",
   },
 
   mediaGrid: {
