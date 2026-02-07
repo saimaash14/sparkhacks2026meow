@@ -8,7 +8,8 @@
     "price_range": "$",
     "availability": ["weekends", "evenings"],
     "tags": ["halal", "student-owned"],
-    "contact": "https://instagram.com/chaicart"
+    "contact": "https://instagram.com/chaicart",
+    "logo_url": "/images/vendor_images/chaicartlogo.jpg"
   },
   {
     "id": 202,
@@ -19,7 +20,8 @@
     "price_range": "$$",
     "availability": ["weekends"],
     "tags": ["desserts", "event-favorite"],
-    "contact": "https://instagram.com/meltedbites"
+    "contact": "https://instagram.com/meltedbites",
+    "logo_url": "/images/vendor_images/meltedbiteslogo.jpg"
   },
   {
     "id": 203,
@@ -30,18 +32,20 @@
     "price_range": "$$",
     "availability": ["weekends", "evenings"],
     "tags": ["boba", "youth-favorite"],
-    "contact": "https://instagram.com/bobawala"
+    "contact": "https://instagram.com/bobawala",
+    "logo_url": "/images/vendor_images/bobawalalogo.jpg"
   },
   {
     "id": 204,
     "name": "Gathers",
     "description": "Modern catering and refreshments vendor focused on bringing people together through food and drink.",
-       "services": ["catering", "refreshments"],
+    "services": ["catering", "refreshments"],
     "vibes": ["professional", "clean", "modern"],
     "price_range": "$$$",
     "availability": ["weekdays", "weekends"],
     "tags": ["catering", "formal-events"],
-    "contact": "https://gathers.co"
+    "contact": "https://gathers.co",
+    "logo_url": "/images/vendor_images/gatherslogo.jpg"
   },
   {
     "id": 205,
@@ -52,7 +56,8 @@
     "price_range": "$$$",
     "availability": ["weekends"],
     "tags": ["decor", "design"],
-    "contact": "https://instagram.com/overlayevents"
+    "contact": "https://instagram.com/overlayevents",
+    "logo_url": "/images/vendor_images/overlaylogo.jpg"
   },
   {
     "id": 206,
@@ -63,7 +68,8 @@
     "price_range": "$$",
     "availability": ["weekdays", "weekends"],
     "tags": ["pizza", "budget-friendly"],
-    "contact": "https://piazzapizza.com"
+    "contact": "https://piazzapizza.com",
+    "logo_url": "/images/vendor_images/pizzalogo1.jpg"
   },
   {
     "id": 207,
@@ -74,7 +80,8 @@
     "price_range": "$$",
     "availability": ["weekends", "evenings"],
     "tags": ["photography", "student-owned", "social-media"],
-    "contact": "https://instagram.com/photokecho"
+    "contact": "https://instagram.com/photokecho",
+    "logo_url": "/images/vendor_images/photokechologo.jpg"
   },
   {
     "id": 208,
@@ -85,6 +92,7 @@
     "price_range": "$",
     "availability": ["weekends"],
     "tags": ["photography", "budget-friendly", "student-owned"],
-    "contact": "https://instagram.com/campuscapture"
+    "contact": "https://instagram.com/campuscapture",
+    "logo_url": "/images/vendor_images/campuscapturelogo.jpg"
   }
 ]
