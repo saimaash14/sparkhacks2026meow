@@ -6,8 +6,20 @@
     "interests": ["technology", "computer science", "women", "career", "engineering"],
     "vibes": ["professional", "supportive"],
     "collab_needs": ["cohost", "speaker"],
-    "contact": "https://www.instagram.com/wicsatuic"
-  },
+    "contact": "https://www.instagram.com/wicsatuic",
+    "logo_url": "/images/club_images/wics.jpg",
+    "banner_url": "/images/club_images/wicsbanner.jpeg",
+    "flyers": ["/images/club_images/wicsflyer.png", "/images/club_images/wicsflyer1.png", "/images/club_images/wicsflyer2.png"],
+     "upcoming_events": [
+    {
+      "title": "Professor Luncheon",
+      "date": "2026-02-11",
+      "time": "12pm",
+      "location": "CDRLC 1413"
+    }
+  ]
+    
+    },
   {
     "id": 2,
     "name": "Women in Cybersecurity (WiCys)",
