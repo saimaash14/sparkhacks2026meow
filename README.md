@@ -60,5 +60,3 @@ Zoya Farooqui - zfaro2@uic.edu - ZoyaF1
 Saima Ashrafi - sashr@uic.edu - saimaash14
 Safiyyah Ahmed - sahme213@uic.edu - safiyyah976
 Mishal Siddiqui - msidd82@uic.edu - mishalsidd
-
-# sparkhacks2026
