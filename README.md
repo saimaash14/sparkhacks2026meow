@@ -1,5 +1,5 @@
 
-# Introduction to React.js
+# Welcome to LoopedIn
 
 # Initalizing React website locally!
 
