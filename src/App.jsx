@@ -236,7 +236,7 @@ export default function App() {
           {/* ✅ branding header */}
           <h1 style={styles.brandTitle}>
             <img src={logo} alt="LoopedIn logo" style={styles.brandLogo} />
-            UIC Club Spotlight
+            LoopedIn
           </h1>
 
           {/* ✅ keep YOUR original description text */}
