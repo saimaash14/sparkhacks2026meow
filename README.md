@@ -1,32 +1,64 @@
 
-# Welcome to LoopedIn
+# LoopedIn
 
-# Initalizing React website locally!
+# Find clubs to get involved with and discover vendors to collab with.
 
-- Ideally have an IDE
-- Install node.js to run a "localhost" site. Node.js — (nodejs.org)
-- Use node -v in Check if node is updated
-- Run npm create vite@latest -- --template react to create the starting files
-- Move to the folder/directory with package.json with cd directory in your terminal
-- Run npm run dev in your terminal to start running your site locally
+LoopedIn connects students with student-run organizations on campus and allows organizations to connect with vendors for their events. Users can search, filter by tags, and "heart" their favorite clubs to pin them to their personal dashboard.
 
+# Features
 
+- Browse student clubs and organizations with descriptions, interests, and vibes.
+- Heart clubs to pin them to your personal dashboard.
+- Search and filter clubs by interests, vibes, or collaboration needs.
+- Register a new club locally (demo mode – saved locally).
+- Responsive design with an intuitive two-panel interface.
+- Clubs can post vendor listings for events, and vendors can respond directly.
 
-# React + Vite
+## Demo
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+- ❤️ Your Clubs panel: view and manage hearted clubs.
+- 🔍 Discover panel: explore clubs by tags, search, or themes.
+- Vendor listings: see club requests and potential collaborations.
+- Register a new club locally via the modal form.
 
-Currently, two official plugins are available:
+## Installation
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+1. Clone the repository: git clone https://github.com/yourusername/loopedin.git
+2. Navigate to the project folder:  cd loopedin
+3. Install dependencies: npm install
+4. Start the development server: npm start
+5. Open your browser and visit http://localhost:3000
 
-## React Compiler
+## Technologies
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+- Frontend: React
+- Styling: Inline CSS / CSS modules
+- State management: React useState, useMemo, useEffect
+- Data persistence: localStorage (for demo)
+- Other: JSON dataset for clubs (clubs.json)
 
-## Expanding the ESLint configuration
+## Project Structure
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+App.js – main app logic, search, filtering, and UI rendering.
+clubs.json – seed dataset for demo clubs.
+components/ – reusable components (ClubTile, Modal, NewClubForm, TagRow).
+App.css – global styles and responsive layout.
+
+# Contributions
+LoopedIn is currently a demo, but we are open to contributions!
+
+Try:
+- Adding new clubs or features
+- Improving UI or styling
+- Implementing backend support
+
+# License
+This project is open source under the MIT License.
+
+# Contacts
+Zoya Farooqui - zfaro2@uic.edu - ZoyaF1
+Saima Ashrafi - sashr@uic.edu - saimaash14
+Safiyyah Ahmed - sahme213@uic.edu - safiyyah976
+Mishal Siddiqui - msidd82@uic.edu - mishalsidd
 
 # sparkhacks2026
