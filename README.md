@@ -52,9 +52,6 @@ Try:
 - Improving UI or styling
 - Implementing backend support
 
-# License
-This project is open source under the MIT License.
-
 # Contacts
 Zoya Farooqui - zfaro2@uic.edu - ZoyaF1
 Saima Ashrafi - sashr@uic.edu - saimaash14
