@@ -31,7 +31,7 @@ function normalize(s) {
   return (s ?? "").toString().trim().toLowerCase();
 }
 
-function matchesQuery(club, q) {
+function matchesQueryClub(club, q) {
   if (!q) return true;
   const fields = [
     club.name,
@@ -39,6 +39,40 @@ function matchesQuery(club, q) {
     ...(club.interests || []),
     ...(club.vibes || []),
     ...(club.collab_needs || []),
+  ]
+    .join(" ")
+    .toLowerCase();
+
+  return fields.includes(q);
+}
+
+function matchesQueryVendor(vendor, q) {
+  if (!q) return true;
+  const fields = [
+    vendor.name,
+    vendor.description,
+    ...(vendor.services || []),
+    ...(vendor.vibes || []),
+    ...(vendor.tags || []),
+    ...(vendor.availability || []),
+    vendor.price_range,
+  ]
+    .join(" ")
+    .toLowerCase();
+
+  return fields.includes(q);
+}
+
+function matchesQueryRequest(req, q) {
+  if (!q) return true;
+  const fields = [
+    req.club_name,
+    req.title,
+    req.description,
+    ...(req.needs || []),
+    req.budget,
+    req.date,
+    req.time_window,
   ]
     .join(" ")
     .toLowerCase();
@@ -62,7 +96,6 @@ function clubMatchesSelectedTags(club, selectedTags) {
 
 function pickRandomUnique(arr, n) {
   const copy = [...arr];
-  // Fisher-Yates shuffle
   for (let i = copy.length - 1; i > 0; i--) {
     const j = Math.floor(Math.random() * (i + 1));
     [copy[i], copy[j]] = [copy[j], copy[i]];
@@ -74,7 +107,10 @@ export default function App() {
   const [heartedIds, setHeartedIds] = useLocalStorageState("heartedClubIds", []);
   const [search, setSearch] = useState("");
   const [discoverMode, setDiscoverMode] = useState("clubs"); // clubs | vendors | requests
+
+  // ✅ Full-screen profile modal state
   const [activeClub, setActiveClub] = useState(null);
+  const [activeVendor, setActiveVendor] = useState(null);
 
   const [userClubs, setUserClubs] = useLocalStorageState("userClubs", []);
   const allClubs = [...clubsData, ...userClubs];
@@ -86,7 +122,6 @@ export default function App() {
   const [isRequestOpen, setIsRequestOpen] = useState(false);
 
   const [isRegisterOpen, setIsRegisterOpen] = useState(false);
-
   const [selectedTags, setSelectedTags] = useState([]);
 
   const clubById = new Map(allClubs.map((c) => [c.id, c]));
@@ -118,53 +153,18 @@ export default function App() {
   );
 
   const discoverItems = useMemo(() => {
-    // CLUBS
     if (discoverMode === "clubs") {
       return allClubs
         .filter((club) => clubMatchesSelectedTags(club, selectedTags))
-        .filter((club) => matchesQuery(club, q));
+        .filter((club) => matchesQueryClub(club, q));
     }
 
-    // VENDORS
     if (discoverMode === "vendors") {
-      return allVendors.filter((vendor) => {
-        if (!q) return true;
-
-        const fields = [
-          vendor.name,
-          vendor.description,
-          ...(vendor.services || []),
-          ...(vendor.vibes || []),
-          ...(vendor.tags || []),
-          ...(vendor.availability || []),
-          vendor.price_range,
-        ]
-          .join(" ")
-          .toLowerCase();
-
-        return fields.includes(q);
-      });
+      return allVendors.filter((vendor) => matchesQueryVendor(vendor, q));
     }
 
-    // ✅ REQUESTS
     if (discoverMode === "requests") {
-      return allRequests.filter((req) => {
-        if (!q) return true;
-
-        const fields = [
-          req.club_name,
-          req.title,
-          req.description,
-          ...(req.needs || []),
-          req.budget,
-          req.date,
-          req.time_window,
-        ]
-          .join(" ")
-          .toLowerCase();
-
-        return fields.includes(q);
-      });
+      return allRequests.filter((req) => matchesQueryRequest(req, q));
     }
 
     return [];
@@ -183,7 +183,6 @@ export default function App() {
     setIsRegisterOpen(false);
   }
 
-  // ✅ add request (saved in localStorage)
   function addRequest(newReq) {
     setUserRequests((prev) => [newReq, ...prev]);
     setIsRequestOpen(false);
@@ -216,10 +215,10 @@ export default function App() {
           <input
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            placeholder="Search clubs, vibes, collabs… (ex: business, cricket, networking)"
+            placeholder="Search clubs, vendors, requests… (ex: business, chai, networking)"
             style={styles.search}
           />
-          {(search || selectedTags.length) ? (
+          {search || selectedTags.length ? (
             <button onClick={clearFilters} style={styles.clearBtn}>
               Clear
             </button>
@@ -227,7 +226,7 @@ export default function App() {
         </div>
       </header>
 
-      {/* Small register button row */}
+      {/* top actions */}
       <div style={styles.topActions}>
         <button style={styles.smallBtn} onClick={() => setIsRegisterOpen(true)}>
           ➕ Register a Club
@@ -235,7 +234,7 @@ export default function App() {
       </div>
 
       <main style={styles.grid}>
-        {/* LEFT: Your Clubs */}
+        {/* LEFT */}
         <section style={styles.panel}>
           <div style={styles.panelHeader}>
             <h2 style={styles.h2}>❤️ Your Clubs</h2>
@@ -259,18 +258,19 @@ export default function App() {
           )}
         </section>
 
-        {/* RIGHT: Discover (tags + results) */}
+        {/* RIGHT */}
         <section style={styles.panel}>
           <div style={styles.panelHeader}>
             <h2 style={styles.h2}>🔍 Discover</h2>
             <span style={styles.countPill}>{discoverItems.length}</span>
           </div>
 
-          {/* ✅ Toggle: what you're discovering */}
+          {/* mode toggle */}
           <div style={{ display: "flex", gap: 8, marginTop: 10, flexWrap: "wrap" }}>
             {["clubs", "vendors", "requests"].map((m) => {
               const active = discoverMode === m;
-              const label = m === "clubs" ? "Clubs" : m === "vendors" ? "Vendors" : "Requests";
+              const label =
+                m === "clubs" ? "Clubs" : m === "vendors" ? "Vendors" : "Requests";
 
               return (
                 <button
@@ -290,16 +290,17 @@ export default function App() {
             })}
           </div>
 
-          {/* ✅ Post request button (only on Requests tab) */}
-          {discoverMode === "requests" && (
+          {/* post request button */}
+          {discoverMode === "requests" ? (
             <div style={{ marginTop: 10 }}>
               <button style={styles.smallBtn} onClick={() => setIsRequestOpen(true)}>
                 ➕ Post a Request
               </button>
             </div>
-          )}
+          ) : null}
 
-          {discoverMode === "clubs" && (
+          {/* club tags */}
+          {discoverMode === "clubs" ? (
             <>
               <p style={styles.muted}>
                 Pick a theme to explore (these rotate). You can also search.
@@ -327,20 +328,18 @@ export default function App() {
                   );
                 })}
               </div>
-            </>
-          )}
 
-          {selectedTags.length ? (
-            <p style={styles.filterLine}>
-              Filtering by:{" "}
-              <span style={styles.filterTags}>{selectedTags.join(", ")}</span>
-            </p>
+              {selectedTags.length ? (
+                <p style={styles.filterLine}>
+                  Filtering by:{" "}
+                  <span style={styles.filterTags}>{selectedTags.join(", ")}</span>
+                </p>
+              ) : null}
+            </>
           ) : null}
 
           {discoverItems.length === 0 ? (
-            <p style={styles.muted}>
-              (No matches yet — try a different tag or search.)
-            </p>
+            <p style={styles.muted}>(No matches yet — try a different search.)</p>
           ) : (
             <div style={styles.list}>
               {discoverMode === "clubs" &&
@@ -350,24 +349,27 @@ export default function App() {
                     club={club}
                     hearted={heartedIds.includes(club.id)}
                     onToggleHeart={toggleHeart}
+                    onOpenProfile={() => setActiveClub(club)}
                   />
                 ))}
 
               {discoverMode === "vendors" &&
                 discoverItems.map((vendor) => (
-                  <VendorTile key={vendor.id} vendor={vendor} />
+                  <VendorTile
+                    key={vendor.id}
+                    vendor={vendor}
+                    onOpenProfile={() => setActiveVendor(vendor)}
+                  />
                 ))}
 
               {discoverMode === "requests" &&
-                discoverItems.map((req) => (
-                  <RequestTile key={req.id} req={req} />
-                ))}
+                discoverItems.map((req) => <RequestTile key={req.id} req={req} />)}
             </div>
           )}
         </section>
       </main>
 
-      {/* ✅ Register Modal */}
+      {/* register club modal */}
       {isRegisterOpen ? (
         <Modal onClose={() => setIsRegisterOpen(false)}>
           <div style={styles.modalHeader}>
@@ -386,7 +388,7 @@ export default function App() {
         </Modal>
       ) : null}
 
-      {/* ✅ Request Modal */}
+      {/* request modal */}
       {isRequestOpen ? (
         <Modal onClose={() => setIsRequestOpen(false)}>
           <div style={styles.modalHeader}>
@@ -405,22 +407,41 @@ export default function App() {
         </Modal>
       ) : null}
 
+      {/* full-screen modals */}
+      {activeClub ? (
+        <FullScreenClubModal club={activeClub} onClose={() => setActiveClub(null)} />
+      ) : null}
+
+      {activeVendor ? (
+        <FullScreenVendorModal
+          vendor={activeVendor}
+          onClose={() => setActiveVendor(null)}
+        />
+      ) : null}
+
       <footer style={styles.footer}>
         <span style={styles.footerText}>
-          MVP dataset: seed UIC orgs + user-added clubs • Hearts saved locally (no backend yet)
+          MVP dataset: seed UIC orgs + user-added clubs + vendor requests • saved locally
         </span>
       </footer>
     </div>
   );
 }
 
-function ClubTile({ club, hearted, onToggleHeart }) {
+function ClubTile({ club, hearted, onToggleHeart, onOpenProfile }) {
   return (
     <article style={styles.card}>
       <div style={styles.cardTop}>
         <div style={{ flex: 1 }}>
           <div style={styles.cardTitleRow}>
-            <h3 style={styles.cardTitle}>{club.name}</h3>
+            <button
+              type="button"
+              onClick={onOpenProfile}
+              style={styles.cardTitleButton}
+              title="Open club profile"
+            >
+              {club.name}
+            </button>
           </div>
           <p style={styles.cardDesc}>{club.description}</p>
         </div>
@@ -455,10 +476,18 @@ function ClubTile({ club, hearted, onToggleHeart }) {
   );
 }
 
-function VendorTile({ vendor }) {
+function VendorTile({ vendor, onOpenProfile }) {
   return (
     <article style={styles.card}>
-      <h3 style={styles.cardTitle}>{vendor.name}</h3>
+      <button
+        type="button"
+        onClick={onOpenProfile}
+        style={styles.cardTitleButton}
+        title="Open vendor profile"
+      >
+        {vendor.name}
+      </button>
+
       <p style={styles.cardDesc}>{vendor.description}</p>
 
       <div style={styles.tagsArea}>
@@ -548,6 +577,7 @@ function NewClubForm({ existingIds, onAddClub, onCancel }) {
   const [vibes, setVibes] = useState("");
   const [collabNeeds, setCollabNeeds] = useState("");
   const [contact, setContact] = useState("");
+  const [discord, setDiscord] = useState("");
 
   function nextId() {
     let id = Math.floor(Math.random() * 1000000) + 1000;
@@ -557,7 +587,6 @@ function NewClubForm({ existingIds, onAddClub, onCancel }) {
 
   function handleSubmit(e) {
     e.preventDefault();
-
     const cleanName = name.trim();
     if (!cleanName) return;
 
@@ -569,6 +598,7 @@ function NewClubForm({ existingIds, onAddClub, onCancel }) {
       vibes: vibes.split(",").map((s) => s.trim()).filter(Boolean),
       collab_needs: collabNeeds.split(",").map((s) => s.trim()).filter(Boolean),
       contact: contact.trim(),
+      discord: discord.trim(),
     };
 
     onAddClub(newClub);
@@ -579,6 +609,7 @@ function NewClubForm({ existingIds, onAddClub, onCancel }) {
     setVibes("");
     setCollabNeeds("");
     setContact("");
+    setDiscord("");
   }
 
   return (
@@ -622,7 +653,14 @@ function NewClubForm({ existingIds, onAddClub, onCancel }) {
       <input
         value={contact}
         onChange={(e) => setContact(e.target.value)}
-        placeholder="Contact link (optional)"
+        placeholder="Instagram link (optional)"
+        style={styles.input}
+      />
+
+      <input
+        value={discord}
+        onChange={(e) => setDiscord(e.target.value)}
+        placeholder="Discord link (optional)"
         style={styles.input}
       />
 
@@ -755,6 +793,220 @@ function NewRequestForm({ existingIds, onAddRequest, onCancel }) {
   );
 }
 
+/** ✅ Full-screen club profile modal */
+function FullScreenClubModal({ club, onClose }) {
+  useEffect(() => {
+    function onKeyDown(e) {
+      if (e.key === "Escape") onClose();
+    }
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [onClose]);
+
+  const flyers = club.flyers ?? [];
+  const photos = club.photos ?? [];
+  const logo = club.logo_url;
+
+  return (
+    <div style={styles.fullOverlay} onMouseDown={onClose}>
+      <div style={styles.fullModal} onMouseDown={(e) => e.stopPropagation()}>
+        <div style={styles.fullTopBar}>
+          <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+            {logo ? (
+              <img src={logo} alt={`${club.name} logo`} style={styles.clubLogo} />
+            ) : (
+              <div style={styles.clubLogoFallback}>No logo</div>
+            )}
+
+            <div>
+              <h2 style={{ margin: 0 }}>{club.name}</h2>
+              <p style={{ margin: "6px 0 0 0", color: "#666" }}>
+                {club.mission ?? club.description ?? ""}
+              </p>
+            </div>
+          </div>
+
+          <button onClick={onClose} style={styles.fullCloseBtn} aria-label="Close">
+            ✕
+          </button>
+        </div>
+
+        <div style={styles.fullContent}>
+          <section style={styles.fullSection}>
+            <h3 style={styles.fullH3}>About</h3>
+            <p style={{ margin: 0, color: "#444", lineHeight: 1.5 }}>
+              {club.description ?? "No description yet."}
+            </p>
+          </section>
+
+          <section style={styles.fullSection}>
+            <h3 style={styles.fullH3}>Tags</h3>
+            <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
+              {[
+                ...(club.interests ?? []),
+                ...(club.vibes ?? []),
+                ...(club.collab_needs ?? []),
+              ].map((t) => (
+                <span key={t} style={styles.tag}>
+                  {t}
+                </span>
+              ))}
+            </div>
+          </section>
+
+          {flyers.length ? (
+            <section style={styles.fullSection}>
+              <h3 style={styles.fullH3}>Flyers</h3>
+              <div style={styles.mediaGrid}>
+                {flyers.map((url) => (
+                  <a
+                    key={url}
+                    href={url}
+                    target="_blank"
+                    rel="noreferrer"
+                    style={{ textDecoration: "none" }}
+                  >
+                    <img src={url} alt="Flyer" style={styles.mediaImg} />
+                  </a>
+                ))}
+              </div>
+            </section>
+          ) : null}
+
+          {photos.length ? (
+            <section style={styles.fullSection}>
+              <h3 style={styles.fullH3}>Photos</h3>
+              <div style={styles.mediaGrid}>
+                {photos.map((url) => (
+                  <a
+                    key={url}
+                    href={url}
+                    target="_blank"
+                    rel="noreferrer"
+                    style={{ textDecoration: "none" }}
+                  >
+                    <img src={url} alt="Club" style={styles.mediaImg} />
+                  </a>
+                ))}
+              </div>
+            </section>
+          ) : null}
+
+          <section style={styles.fullSection}>
+            <h3 style={styles.fullH3}>Contact</h3>
+            {club.contact ? (
+              <a href={club.contact} target="_blank" rel="noreferrer" style={styles.link}>
+                {club.contact}
+              </a>
+            ) : (
+              <p style={{ margin: 0, color: "#777" }}>No contact link provided.</p>
+            )}
+          </section>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/** ✅ Full-screen vendor profile modal */
+function FullScreenVendorModal({ vendor, onClose }) {
+  useEffect(() => {
+    function onKeyDown(e) {
+      if (e.key === "Escape") onClose();
+    }
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [onClose]);
+
+  const photos = vendor.photos ?? [];
+  const logo = vendor.logo_url;
+
+  return (
+    <div style={styles.fullOverlay} onMouseDown={onClose}>
+      <div style={styles.fullModal} onMouseDown={(e) => e.stopPropagation()}>
+        <div style={styles.fullTopBar}>
+          <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+            {logo ? (
+              <img src={logo} alt={`${vendor.name} logo`} style={styles.clubLogo} />
+            ) : (
+              <div style={styles.clubLogoFallback}>No logo</div>
+            )}
+
+            <div>
+              <h2 style={{ margin: 0 }}>{vendor.name}</h2>
+              <p style={{ margin: "6px 0 0 0", color: "#666" }}>
+                {vendor.description ?? ""}
+              </p>
+            </div>
+          </div>
+
+          <button onClick={onClose} style={styles.fullCloseBtn} aria-label="Close">
+            ✕
+          </button>
+        </div>
+
+        <div style={styles.fullContent}>
+          <section style={styles.fullSection}>
+            <h3 style={styles.fullH3}>About</h3>
+            <p style={{ margin: 0, color: "#444", lineHeight: 1.5 }}>
+              {vendor.description ?? "No description yet."}
+            </p>
+          </section>
+
+          <section style={styles.fullSection}>
+            <h3 style={styles.fullH3}>Details</h3>
+            <div style={{ display: "grid", gap: 10 }}>
+              <TagRow label="Services" items={vendor.services} />
+              <TagRow label="Vibes" items={vendor.vibes} />
+              <TagRow label="Tags" items={vendor.tags} />
+              <TagRow label="Avail" items={vendor.availability} />
+
+              {vendor.price_range ? (
+                <div style={styles.tagRow}>
+                  <span style={styles.tagLabel}>Price:</span>
+                  <div style={styles.tagWrap}>
+                    <span style={styles.tag}>{vendor.price_range}</span>
+                  </div>
+                </div>
+              ) : null}
+            </div>
+          </section>
+
+          {photos.length ? (
+            <section style={styles.fullSection}>
+              <h3 style={styles.fullH3}>Photos</h3>
+              <div style={styles.mediaGrid}>
+                {photos.map((url) => (
+                  <a
+                    key={url}
+                    href={url}
+                    target="_blank"
+                    rel="noreferrer"
+                    style={{ textDecoration: "none" }}
+                  >
+                    <img src={url} alt="Vendor" style={styles.mediaImg} />
+                  </a>
+                ))}
+              </div>
+            </section>
+          ) : null}
+
+          <section style={styles.fullSection}>
+            <h3 style={styles.fullH3}>Contact</h3>
+            {vendor.contact ? (
+              <a href={vendor.contact} target="_blank" rel="noreferrer" style={styles.link}>
+                {vendor.contact}
+              </a>
+            ) : (
+              <p style={{ margin: 0, color: "#777" }}>No contact link provided.</p>
+            )}
+          </section>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 const styles = {
   page: {
     width: "100%",
@@ -820,7 +1072,6 @@ const styles = {
     cursor: "pointer",
   },
 
-  // ✅ 2 columns now
   grid: {
     display: "grid",
     gridTemplateColumns: "1fr 1.6fr",
@@ -886,6 +1137,18 @@ const styles = {
   cardTitle: { margin: 0, fontSize: 16 },
   cardDesc: { margin: "6px 0 0 0", color: "#555", lineHeight: 1.35 },
 
+  // ✅ clickable title
+  cardTitleButton: {
+    border: "none",
+    padding: 0,
+    background: "transparent",
+    cursor: "pointer",
+    fontSize: 16,
+    fontWeight: 700,
+    color: "#111827",
+    textAlign: "left",
+  },
+
   heartBtn: {
     border: "1px solid #ddd",
     borderRadius: 999,
@@ -913,6 +1176,7 @@ const styles = {
     marginTop: 12,
     color: "#3d8cfb",
     textDecoration: "none",
+    wordBreak: "break-word",
   },
   noLink: { display: "inline-block", marginTop: 12, color: "#999", fontSize: 12 },
 
@@ -1000,4 +1264,96 @@ const styles = {
 
   footer: { marginTop: 18, paddingTop: 10, borderTop: "1px solid #eee" },
   footerText: { color: "#888", fontSize: 12 },
+
+  // ✅ Full-screen modal styles
+  fullOverlay: {
+    position: "fixed",
+    inset: 0,
+    background: "rgba(0,0,0,0.45)",
+    zIndex: 10000,
+    display: "flex",
+    justifyContent: "center",
+    alignItems: "stretch",
+    padding: 0,
+  },
+
+  fullModal: {
+    width: "100%",
+    height: "100%",
+    background: "white",
+    borderRadius: 0,
+    border: "none",
+    overflow: "hidden",
+    display: "flex",
+    flexDirection: "column",
+  },
+
+  fullTopBar: {
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "space-between",
+    gap: 12,
+    padding: 16,
+    borderBottom: "1px solid #eee",
+  },
+
+  fullCloseBtn: {
+    border: "1px solid #ddd",
+    background: "white",
+    color: "#111827",
+    borderRadius: 12,
+    padding: "8px 12px",
+    cursor: "pointer",
+    fontSize: 14,
+  },
+
+  clubLogo: {
+    width: 56,
+    height: 56,
+    objectFit: "cover",
+    borderRadius: 14,
+    border: "1px solid #eee",
+  },
+  clubLogoFallback: {
+    width: 56,
+    height: 56,
+    borderRadius: 14,
+    border: "1px solid #eee",
+    display: "grid",
+    placeItems: "center",
+    color: "#777",
+    fontSize: 12,
+    background: "#fafafa",
+  },
+
+  fullContent: {
+    padding: 16,
+    overflowY: "auto",
+    maxWidth: 1000,
+    width: "100%",
+    margin: "0 auto",
+  },
+
+  fullSection: {
+    marginTop: 18,
+  },
+
+  fullH3: {
+    margin: "0 0 8px 0",
+    fontSize: 16,
+  },
+
+  mediaGrid: {
+    display: "grid",
+    gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
+    gap: 12,
+  },
+
+  mediaImg: {
+    width: "100%",
+    height: 240,
+    objectFit: "cover",
+    borderRadius: 16,
+    border: "1px solid #eee",
+  },
 };
